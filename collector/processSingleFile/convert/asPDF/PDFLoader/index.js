@@ -29,16 +29,27 @@ class PDFLoader {
       }
 
       let lastY;
+      let lastEnd;
       const textItems = [];
       for (const item of content.items) {
-        if ("str" in item) {
-          if (lastY === item.transform[5] || !lastY) {
-            textItems.push(item.str);
-          } else {
-            textItems.push(`\n${item.str}`);
-          }
-          lastY = item.transform[5];
+        if (!("str" in item)) continue;
+        const [, , c, d, x, y] = item.transform;
+        if (lastY !== undefined && y !== lastY) {
+          textItems.push("\n");
+        } else if (
+          lastEnd !== undefined &&
+          x - lastEnd > Math.hypot(c, d) * 0.15 &&
+          !/\s$/.test(textItems.at(-1) ?? "") &&
+          !/^\s/.test(item.str)
+        ) {
+          // Runs on one baseline with a visible gap between them (table cells,
+          // columns, tab stops) have no space character to separate them.
+          // A gap under 0.15em is kerning inside a word, so it gets none.
+          textItems.push(" ");
         }
+        textItems.push(item.str);
+        lastY = y;
+        lastEnd = x + item.width;
       }
 
       const text = textItems.join("");
