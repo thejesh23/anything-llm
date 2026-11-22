@@ -396,7 +396,7 @@ class ModelRouterService {
       0
     );
     const historyTokens = chatHistory.reduce(
-      (sum, msg) => sum + tokenManager.countFromString(msg.content || ""),
+      (sum, msg) => sum + tokenManager.countFromContent(msg.content || ""),
       0
     );
     const messageTokens = tokenManager.countFromString(message);
